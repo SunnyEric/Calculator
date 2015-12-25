@@ -9,14 +9,14 @@
 #define numalen 100
 #define numblen 20
 #define charlen 1000
-#define version "0.3.0"
+#define version "0.3.1"
 
 struct number
 {
 	int mis;  //负号
 	int a[numalen+1];
 	int la;
-	int b[numblen+2];
+	int b[numblen+2]; 
 	int lb;
 };
 
@@ -224,7 +224,7 @@ int countzero(struct number num)
 }
 
 struct number getb(struct number num)
-{//不管符号，取小数
+{//不管符号，只取小数
 	struct number n=initial();
 	int i;
 	n.la=1;
@@ -617,6 +617,28 @@ struct number sqrtnum(struct number n1,struct number n2)
 	return n;
 }
 
+struct number fac(struct number num)
+{//求阶层
+	struct number n=initial();
+	if(num.lb!=0||num.mis==-1)
+	{
+		error=1;
+		printf("格式错误\n");
+		return n;
+	}
+	if(numcmp(num,charntonum("0"))==0)
+	{
+		return charntonum("1");
+	}
+	n=num;
+	while(numcmp(num,charntonum("1"))!=0)
+	{
+		num=minus(num,charntonum("1"));
+		n=multiply(n,num);
+	}
+	return n;
+}
+
 int findfn(char *ch,int n)
 {
 	int i;
@@ -687,6 +709,10 @@ void calcutwo(char *ch,int n,int f,int b)
 	{
 		ans=pownum(num1,num2);
 	}
+	if(ch[n]=='!')
+	{
+		ans=fac(num1);
+	}
 	if(error==1) return;
 	char formula[charlen];
 	numtocharn(ans,an);
@@ -708,6 +734,16 @@ void calculate(char *ch)
 	int n,f,b;
 	reppm(ch);
 	
+	n=findcharn(ch,"!");
+	while(n!=-1)
+	{
+		f=findfn(ch,n);
+		calcutwo(ch,n,f,n);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"!");
+	}
 	n=findcharn(ch,"^");
 	while(n!=-1)
 	{
@@ -836,6 +872,12 @@ int check(char *ch)
 	{
 		if(ch[i]=='(') t++;
 		if(ch[i]==')') t--;
+		if(t<0)
+		{
+			pass=0;
+			printf("格式错误\n");
+			return pass;
+		}
 	}
 	if(t!=0)
 	{
@@ -846,25 +888,21 @@ int check(char *ch)
 	t=t+findcharn(ch,"++")+1;//检测不能出现的符号
 	t=t+findcharn(ch,"+*")+1;
 	t=t+findcharn(ch,"+/")+1;
-	t=t+findcharn(ch,"+^")+1;
 	t=t+findcharn(ch,"-+")+1;
 	t=t+findcharn(ch,"-*")+1;
 	t=t+findcharn(ch,"-/")+1;
-	t=t+findcharn(ch,"-^")+1;
 	t=t+findcharn(ch,"*+")+1;
 	t=t+findcharn(ch,"**")+1;
 	t=t+findcharn(ch,"*/")+1;
-	t=t+findcharn(ch,"*^")+1;
 	t=t+findcharn(ch,"/+")+1;
 	t=t+findcharn(ch,"/*")+1;
 	t=t+findcharn(ch,"//")+1;
-	t=t+findcharn(ch,"/^")+1;
 	t=t+findcharn(ch,"()")+1;
-	t=t+findcharn(ch,")(")+1;
 	t=t+findcharn(ch,"(+")+1;
 	t=t+findcharn(ch,"(*")+1;
 	t=t+findcharn(ch,"(/")+1;
 	t=t+findcharn(ch,"(^")+1;
+	t=t+findcharn(ch,")(")+1;
 	t=t+findcharn(ch,"+)")+1;
 	t=t+findcharn(ch,"-)")+1;
 	t=t+findcharn(ch,"*)")+1;
@@ -874,14 +912,25 @@ int check(char *ch)
 	t=t+findcharn(ch,"^+")+1;
 	t=t+findcharn(ch,"^*")+1;
 	t=t+findcharn(ch,"^/")+1;
-	t=t+findcharn(ch,",")+1;
+	t=t+findcharn(ch,"+^")+1;
+	t=t+findcharn(ch,"-^")+1;
+	t=t+findcharn(ch,"*^")+1;
+	t=t+findcharn(ch,"/^")+1;
+	t=t+findcharn(ch,"!(")+1;
+	t=t+findcharn(ch,"!^")+1;
+	t=t+findcharn(ch,"(!")+1;
+	t=t+findcharn(ch,"+!")+1;
+	t=t+findcharn(ch,"-!")+1;
+	t=t+findcharn(ch,"*!")+1;
+	t=t+findcharn(ch,"/!")+1;
+	t=t+findcharn(ch,"^!")+1;
 	if(t>0)
 	{
 		pass=0;
 		printf("格式错误\n");
 		return pass;
 	}
-	if(ch[0]=='+'||ch[0]=='*'||ch[0]=='/'||ch[0]=='.'||ch[0]==')'||ch[0]=='^')
+	if(ch[0]=='+'||ch[0]=='*'||ch[0]=='/'||ch[0]=='.'||ch[0]==')'||ch[0]=='^'||ch[0]=='!')
 	{  //检测边缘符号
 		pass=0;
 		printf("格式错误\n");
@@ -896,7 +945,7 @@ int check(char *ch)
 	}
 	
 	strcpy(c,ch);
-	repcharn(c,"0","");  //检测点号
+	repcharn(c,"0","");  //检测小数点
 	repcharn(c,"1","");
 	repcharn(c,"2","");
 	repcharn(c,"3","");
@@ -952,11 +1001,7 @@ int check(char *ch)
 	{
 		t=findcharn(c,")");
 		if(t==-1) continue;
-		if(t==len-1)
-		{
-			c[t]=' ';
-			continue;
-		}
+		if(t==len-1) break;
 		if(c[t+1]>='0'&&c[t+1]<='9')
 		{
 			pass=0;
@@ -966,6 +1011,21 @@ int check(char *ch)
 		c[t]=' ';
 	}
 	repcharn(c," ",")");
+	t=0;
+	while(t!=-1)  //检测阶层符号
+	{
+		t=findcharn(c,"!");
+		if(t==-1) continue;
+		if(t==len-1) break;
+		if(c[t+1]>='0'&&c[t+1]<='9')
+		{
+			pass=0;
+			printf("格式错误\n");
+			return pass;
+		}
+		c[t]=' ';
+	}
+	repcharn(c," ","!");
 
 	repcharn(c,"(","");//检测剩余
 	repcharn(c,")","");
@@ -975,6 +1035,7 @@ int check(char *ch)
 	repcharn(c,"/","");
 	repcharn(c,".","");
 	repcharn(c,"^","");
+	repcharn(c,"!","");
 	len=strlen(c);
 	if(len==0)
 	{
