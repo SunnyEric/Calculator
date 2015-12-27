@@ -9,7 +9,11 @@
 #define numalen 100
 #define numblen 20
 #define charlen 1000
-#define version "0.3.1"
+#define version "0.3.2"
+
+#define exp "2.71828182845904523536028747135266249775724709369995"
+#define pai "3.14159265358979323846264338327950288419716939937510"
+#define ln10 "2.30258509299404568401799145468436420760110148862877"
 
 struct number
 {
@@ -20,11 +24,12 @@ struct number
 	int lb;
 };
 
+struct number remzero(struct number num);
 struct number plus(struct number n1,struct number n2);
 struct number minus(struct number n1,struct number n2);
+struct number ln(struct number num);
+struct number pownum(struct number n1,struct number n2);
 void show(struct number num);
-struct number remzero(struct number num);
-struct number sqrtnum(struct number n1,struct number n2);
 
 struct number initial()
 {
@@ -404,9 +409,11 @@ struct number multiply(struct number n1,struct number n2)
 				a=0;
 			}
 			k--;
-			if(k==-1) break;
+			if(k==-1&&j>numalen-n1.la) break;
+			if(k==-1&&j==numalen-n1.la&&a!=0) break;
 		}
-		if(k==-1) break;
+		if(j>numalen-n1.la) break;
+		if(j==numalen-n1.la&&a!=0) break;
 		if(a!=0)
 		{
 			n.a[k]=a;
@@ -414,7 +421,7 @@ struct number multiply(struct number n1,struct number n2)
 			if(i==numalen-n2.la) n.la++;
 		}
 	}
-	if(k==-1)
+	if((j>numalen-n1.la)||(j==numalen-n1.la&&a!=0))
 	{
 		error=1;
 		printf("位数溢出\n");
@@ -497,6 +504,29 @@ struct number divide(struct number n1,struct number n2)
 	return n;
 }
 
+struct number fac(struct number num)
+{//求阶层
+	struct number n=initial();
+	if(num.lb!=0||num.mis==-1)
+	{
+		error=1;
+		printf("小数或负数的阶层错误\n");
+		return n;
+	}
+	if(numcmp(num,charntonum("0"))==0)
+	{
+		return charntonum("1");
+	}
+	n=num;
+	while(numcmp(num,charntonum("1"))!=0)
+	{
+		num=minus(num,charntonum("1"));
+		n=multiply(n,num);
+		if(error==1) return n;
+	}
+	return n;
+}
+
 struct number powint(struct number n1,int n2)
 {
 	struct number n=initial();
@@ -516,6 +546,24 @@ struct number powint(struct number n1,int n2)
 	return n;
 }
 
+struct number powe(struct number num)
+{//num要小于1
+	struct number n=initial();
+	struct number temp=charntonum("1");
+	int i=1;
+	char c[10]="";
+	while(numcmp(temp,n)!=0)
+	{
+		n=temp;
+		inttocharn(i,c);
+		temp=pownum(num,charntonum(c));
+		temp=divide(temp,fac(charntonum(c)));
+		temp=plus(n,temp);
+		i++;
+	}
+	return n;
+}
+
 struct number pownum(struct number n1,struct number n2)
 {
 	struct number n=initial();
@@ -529,7 +577,7 @@ struct number pownum(struct number n1,struct number n2)
 			if(n2.lb!=0)
 			{
 				error=1;
-				printf("格式错误\n");
+				printf("负数的小数次方错误\n");
 				return n;
 			}
 			else
@@ -539,6 +587,22 @@ struct number pownum(struct number n1,struct number n2)
 				return n1;
 			}
 		}
+	}
+	if(numcmp(n1,charntonum("0"))==0)
+	{
+		if(numcmp(n2,charntonum("0"))==0)
+		{
+			error=1;
+			printf("0^0无意义\n");
+			return n;
+		}
+		if(n2.mis==-1)
+		{
+			error=1;
+			printf("0的负数次方错误\n");
+			return n;
+		}
+		return n1;
 	}
 	if(n2.mis==-1)
 	{
@@ -557,7 +621,7 @@ struct number pownum(struct number n1,struct number n2)
 	if(n1.mis==-1)
 	{
 		error=1;
-		printf("格式错误\n");
+		printf("负数的小数次方错误\n");
 		return n;
 	}
 	temp=getb(n2);
@@ -565,77 +629,120 @@ struct number pownum(struct number n1,struct number n2)
 	n=pownum(n1,temp);
 	if(error==1) return n;
 	temp=getb(n2);
-	temp=multiply(temp,charntonum("10"));
-	temp=pownum(n1,temp);
-	if(error==1) return n;
-	temp=sqrtnum(temp,charntonum("10"));
-	if(error==1) return n;
+	n2=multiply(temp,ln(n1));
+	temp=getb(n2);
+	temp=minus(n2,temp);
+	temp=pownum(charntonum(exp),temp);
+	n=multiply(n,temp);
+	temp=getb(n2);
+	temp=powe(temp);
 	n=multiply(n,temp);
 	if(t==1) n=divide(charntonum("1"),n);
 	return n;
 }
 
-struct number sqrtnum(struct number n1,struct number n2)
+struct number ln(struct number num)
+{ //ln(x)=ln((1+y)/(1-y))=2(y+(1/3)y^3+(1/5)y^5+...)
+	if(num.mis==-1||numcmp(num,charntonum("0"))==0)
+	{
+		error=1;
+		printf("真数错误\n");
+		return charntonum("0");
+	}
+	int t;
+	t=numcmp(num,charntonum("5"));
+	if(t==1)
+	{
+		num=divide(num,charntonum("10"));
+		num=plus(ln(num),charntonum(ln10));
+		return num;
+	}
+	t=numcmp(num,charntonum("0.5"));
+	if(t==2)
+	{
+		num=multiply(num,charntonum("10"));
+		num=minus(ln(num),charntonum(ln10));
+		return num;
+	}
+	struct number n=charntonum("0");
+	struct number temp1;
+	struct number temp2;
+	int i=3;
+	char c[10]="";
+	//y=(x-1)/(x+1)
+	temp1=minus(num,charntonum("1"));
+	temp2=plus(num,charntonum("1"));
+	num=divide(temp1,temp2);
+	temp1=num;
+	while(numcmp(temp1,n)!=0)
+	{
+		n=temp1;
+		inttocharn(i,c);
+		temp2=powint(num,i);
+		temp2=divide(temp2,charntonum(c));
+		temp1=plus(temp1,temp2);
+		i=i+2;
+	}
+	n=multiply(n,charntonum("2"));
+	n=remzero(n);
+	return n;
+}
+
+struct number lognum(struct number n1,struct number n2)
 {
 	struct number n=initial();
-	int i,temp;
-	n.la=n1.la;
-	if(n.la>10) n.la=10;
+	if(n1.mis==-1||numcmp(n1,charntonum("0"))==0||numcmp(n1,charntonum("1"))==0)
+	{
+		error=1;
+		printf("底数错误\n");
+		return n;
+	}
+	if(n2.mis==-1||numcmp(n2,charntonum("0"))==0)
+	{
+		error=1;
+		printf("真数错误\n");
+		return n;
+	}
+	int i,tmp,t;
+	if(n1.la>=10) n.la=0;
+	if(n1.la<=9&&n1.la>=2) n.la=1;
+	if(n1.la==1) n.la=2;
 	for(i=numalen-n.la;i<=numalen-1;i++)
 	{
 		n.a[i]=9;
-		temp=numcmp(n1,pownum(n,n2));
+		tmp=numcmp(n2,pownum(n1,n));
 		if(error==1) return n;
-		while(temp==2)
+		t=numcmp(n2,charntonum("1"));
+		if(t==1||t==0)
 		{
-			n.a[i]--;
-			temp=numcmp(n1,pownum(n,n2));
-			if(error==1) return n;
+			while(tmp==2)
+			{
+				n.a[i]--;
+				tmp=numcmp(n2,pownum(n1,n));
+				if(error==1) return n;
+			}
 		}
-		if(temp==0)
+		if(t==2)
+		{
+			while(tmp==1)
+			{
+				n.a[i]--;
+				tmp=numcmp(n2,pownum(n1,n));
+				if(error==1) return n;
+			}
+		}
+		if(tmp==0)
 		{
 			n=remzero(n);
 			return n;
 		}
 	}
-	for(i=0;i<=numblen;i++)
-	{
-		n.b[i]=9;
-		n.lb++;
-		temp=numcmp(n1,pownum(n,n2));
-		if(error==1) return n;
-		while(temp==2)
-		{
-			n.b[i]--;
-			temp=numcmp(n1,pownum(n,n2));
-			if(error==1) return n;
-		}
-		if(temp==0) break;
-	}
-	n=carry(n);
-	n=remzero(n);
-	return n;
-}
-
-struct number fac(struct number num)
-{//求阶层
-	struct number n=initial();
-	if(num.lb!=0||num.mis==-1)
-	{
-		error=1;
-		printf("格式错误\n");
-		return n;
-	}
-	if(numcmp(num,charntonum("0"))==0)
-	{
-		return charntonum("1");
-	}
-	n=num;
-	while(numcmp(num,charntonum("1"))!=0)
-	{
-		num=minus(num,charntonum("1"));
-		n=multiply(n,num);
-	}
+	n=ln(n2);
+	if(error==1) return n;
+	struct number temp=ln(n1);
+	if(error==1) return n;
+	n=divide(n,temp);
+	carry(n);
 	return n;
 }
 
@@ -713,6 +820,14 @@ void calcutwo(char *ch,int n,int f,int b)
 	{
 		ans=fac(num1);
 	}
+	if(ch[n]=='\'')
+	{
+		ans=lognum(num1,num2);
+	}
+	if(ch[n]=='n')
+	{
+		if(ch[n-1]=='l') ans=ln(num2);
+	}
 	if(error==1) return;
 	char formula[charlen];
 	numtocharn(ans,an);
@@ -754,6 +869,27 @@ void calculate(char *ch)
 		reppm(ch);
 		printf("= %s\n",ch);
 		n=findcharn(ch,"^");
+	}
+	n=findcharn(ch,"'");
+	while(n!=-1)
+	{
+		f=findfn(ch,n);
+		b=findbn(ch,n);
+		calcutwo(ch,n,f,b);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"'");
+	}
+	n=findcharn(ch,"ln");
+	while(n!=-1)
+	{
+		b=findbn(ch,n+1);
+		calcutwo(ch,n+1,n,b);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"'");
 	}
 	n=findcharn(ch,"/");
 	while(n!=-1)
@@ -901,17 +1037,17 @@ int check(char *ch)
 	t=t+findcharn(ch,"(+")+1;
 	t=t+findcharn(ch,"(*")+1;
 	t=t+findcharn(ch,"(/")+1;
-	t=t+findcharn(ch,"(^")+1;
 	t=t+findcharn(ch,")(")+1;
 	t=t+findcharn(ch,"+)")+1;
 	t=t+findcharn(ch,"-)")+1;
 	t=t+findcharn(ch,"*)")+1;
 	t=t+findcharn(ch,"/)")+1;
 	t=t+findcharn(ch,"^)")+1;
-	t=t+findcharn(ch,"^^")+1;
 	t=t+findcharn(ch,"^+")+1;
 	t=t+findcharn(ch,"^*")+1;
 	t=t+findcharn(ch,"^/")+1;
+	t=t+findcharn(ch,"^^")+1;
+	t=t+findcharn(ch,"(^")+1;
 	t=t+findcharn(ch,"+^")+1;
 	t=t+findcharn(ch,"-^")+1;
 	t=t+findcharn(ch,"*^")+1;
@@ -924,20 +1060,49 @@ int check(char *ch)
 	t=t+findcharn(ch,"*!")+1;
 	t=t+findcharn(ch,"/!")+1;
 	t=t+findcharn(ch,"^!")+1;
+	t=t+findcharn(ch,"')")+1;
+	t=t+findcharn(ch,"'+")+1;
+	t=t+findcharn(ch,"'*")+1;
+	t=t+findcharn(ch,"'/")+1;
+	t=t+findcharn(ch,"'^")+1;
+	t=t+findcharn(ch,"'!")+1;
+	t=t+findcharn(ch,"''")+1;
+	t=t+findcharn(ch,"('")+1;
+	t=t+findcharn(ch,"+'")+1;
+	t=t+findcharn(ch,"-'")+1;
+	t=t+findcharn(ch,"*'")+1;
+	t=t+findcharn(ch,"/'")+1;
+	t=t+findcharn(ch,"^'")+1;
+	t=t+findcharn(ch,"!'")+1;
+	t=t+findcharn(ch,"n(")+1;
+	t=t+findcharn(ch,"n)")+1;
+	t=t+findcharn(ch,"n+")+1;
+	t=t+findcharn(ch,"n*")+1;
+	t=t+findcharn(ch,"n/")+1;
+	t=t+findcharn(ch,"n^")+1;
+	t=t+findcharn(ch,"n!")+1;
+	t=t+findcharn(ch,"n'")+1;
+	t=t+findcharn(ch,"nl")+1;
+	t=t+findcharn(ch,")l")+1;
+	t=t+findcharn(ch,"^l")+1;
+	t=t+findcharn(ch,"!l")+1;
+	t=t+findcharn(ch,"'l")+1;
 	if(t>0)
 	{
 		pass=0;
 		printf("格式错误\n");
 		return pass;
 	}
-	if(ch[0]=='+'||ch[0]=='*'||ch[0]=='/'||ch[0]=='.'||ch[0]==')'||ch[0]=='^'||ch[0]=='!')
+	if(ch[0]=='+'||ch[0]=='*'||ch[0]=='/'||ch[0]=='.'||ch[0]==')'||ch[0]=='^'||ch[0]=='!'||
+		ch[0]=='\'')
 	{  //检测边缘符号
 		pass=0;
 		printf("格式错误\n");
 		return pass;
 	}
 	if(ch[len-1]=='+'||ch[len-1]=='-'||ch[len-1]=='*'||ch[len-1]=='/'||
-		ch[len-1]=='.'||ch[len-1]=='('||ch[len-1]=='^')
+		ch[len-1]=='.'||ch[len-1]=='('||ch[len-1]=='^'||ch[len-1]=='\''||
+		ch[len-1]=='n')
 	{
 		pass=0;
 		printf("格式错误\n");
@@ -1026,6 +1191,25 @@ int check(char *ch)
 		c[t]=' ';
 	}
 	repcharn(c," ","!");
+	t=0;
+	while(t!=-1)  //检测ln
+	{
+		t=findcharn(c,"ln");
+		if(t==-1) continue;
+		if(t==0)
+		{
+			c[t]=' ';
+			continue;
+		}
+		if(c[t-1]>='0'&&c[t-1]<='9')
+		{
+			pass=0;
+			printf("格式错误\n");
+			return pass;
+		}
+		c[t]=' ';
+	}
+	repcharn(c," n","ln");
 
 	repcharn(c,"(","");//检测剩余
 	repcharn(c,")","");
@@ -1036,6 +1220,8 @@ int check(char *ch)
 	repcharn(c,".","");
 	repcharn(c,"^","");
 	repcharn(c,"!","");
+	repcharn(c,"'","");
+	repcharn(c,"ln","");
 	len=strlen(c);
 	if(len==0)
 	{
