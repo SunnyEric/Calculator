@@ -9,7 +9,7 @@
 #define numalen 100
 #define numblen 20
 #define charlen 1000
-#define version "0.3.2"
+#define version "0.3.3"
 
 #define exp "2.71828182845904523536028747135266249775724709369995"
 #define pai "3.14159265358979323846264338327950288419716939937510"
@@ -624,6 +624,7 @@ struct number pownum(struct number n1,struct number n2)
 		printf("负数的小数次方错误\n");
 		return n;
 	}
+	//x^y = x^a*x^b = x^a*e^blnx = x^a*e^c*e^d
 	temp=getb(n2);
 	temp=minus(n2,temp);
 	n=pownum(n1,temp);
@@ -742,7 +743,104 @@ struct number lognum(struct number n1,struct number n2)
 	struct number temp=ln(n1);
 	if(error==1) return n;
 	n=divide(n,temp);
-	carry(n);
+	return n;
+}
+
+struct number sinnum(struct number num)
+{
+	while(num.mis==-1)
+	{
+		num=plus(num,charntonum("360"));
+	}
+	while(numcmp(num,charntonum("360"))==1||numcmp(num,charntonum("360"))==0)
+	{
+		num=minus(num,charntonum("360"));
+	}
+	int t=0;
+	if(numcmp(num,charntonum("180"))==1)
+	{
+		t=1;
+		num=minus(num,charntonum("180"));
+	}
+	if(numcmp(num,charntonum("90"))==0)
+	{
+		return charntonum("1");
+	}
+	if(numcmp(num,charntonum("30"))==0)
+	{
+		return charntonum("0.5");
+	}
+	struct number n=initial();
+	struct number temp;
+	num=divide(num,charntonum("180"));
+	num=multiply(num,charntonum(pai));
+	temp=num;
+	int i=3,j=1;
+	char c[10]="";
+	while(numcmp(temp,n)!=0)
+	{
+		n=temp;
+		inttocharn(i,c);
+		temp=powint(num,i);
+		temp=divide(temp,fac(charntonum(c)));
+		if(j%2==1) temp=minus(n,temp);
+		if(j%2==0) temp=plus(n,temp);
+		i=i+2;j++;
+	}
+	if(t==1) n.mis=-1;
+	return n;
+}
+
+struct number cosnum(struct number num)
+{
+	while(num.mis==-1)
+	{
+		num=plus(num,charntonum("360"));
+	}
+	while(numcmp(num,charntonum("270"))==1||numcmp(num,charntonum("270"))==0)
+	{
+		num=minus(num,charntonum("360"));
+	}
+	if(numcmp(num,charntonum("60"))==0)
+	{
+		return charntonum("0.5");
+	}
+	int t=0;
+	if(numcmp(num,charntonum("90"))==1) t=1;
+	struct number n=initial();
+	n=sinnum(num);
+	n=pownum(n,charntonum("2"));
+	n=minus(charntonum("1"),n);
+	n=pownum(n,charntonum("0.5"));
+	if(t==1) n.mis=-1;
+	return n;
+}
+
+struct number tannum(struct number num)
+{
+	while(num.mis==-1)
+	{
+		num=plus(num,charntonum("360"));
+	}
+	while(numcmp(num,charntonum("360"))==1||numcmp(num,charntonum("360"))==0)
+	{
+		num=minus(num,charntonum("360"));
+	}
+	while(numcmp(num,charntonum("90"))==1)
+	{
+		num=minus(num,charntonum("180"));
+	}
+	struct number n=initial();
+	if(numcmp(num,charntonum("90"))==0)
+	{
+		error=1;
+		printf("无意义\n");
+		return n;
+	}
+	struct number temp;
+	n=sinnum(num);
+	temp=cosnum(num);
+	n=divide(n,temp);
 	return n;
 }
 
@@ -787,7 +885,7 @@ void calcutwo(char *ch,int n,int f,int b)
 {
 	struct number num1;
 	struct number num2;
-	struct number ans;
+	struct number answer;
 	char n1[charlen],n2[charlen],an[charlen];
 	repcharn(ch," ","-");
 	strcpy(n1,ch);
@@ -798,39 +896,45 @@ void calcutwo(char *ch,int n,int f,int b)
 	num2=charntonum(n2);
 	if(ch[n]=='+')
 	{
-		ans=plus(num1,num2);
+		answer=plus(num1,num2);
 	}
 	if(ch[n]=='-')
 	{
-		ans=minus(num1,num2);
+		answer=minus(num1,num2);
 	}
 	if(ch[n]=='*')
 	{
-		ans=multiply(num1,num2);
+		answer=multiply(num1,num2);
 	}
 	if(ch[n]=='/')
 	{
-		ans=divide(num1,num2);
+		answer=divide(num1,num2);
 	}
 	if(ch[n]=='^')
 	{
-		ans=pownum(num1,num2);
+		answer=pownum(num1,num2);
 	}
 	if(ch[n]=='!')
 	{
-		ans=fac(num1);
+		answer=fac(num1);
 	}
 	if(ch[n]=='\'')
 	{
-		ans=lognum(num1,num2);
+		answer=lognum(num1,num2);
 	}
 	if(ch[n]=='n')
 	{
-		if(ch[n-1]=='l') ans=ln(num2);
+		if(ch[n-1]=='l') answer=ln(num2);
+		if(ch[n-1]=='i') answer=sinnum(num2);
+		if(ch[n-1]=='a') answer=tannum(num2);
+	}
+	if(ch[n]=='s')
+	{
+		answer=cosnum(num2);
 	}
 	if(error==1) return;
 	char formula[charlen];
-	numtocharn(ans,an);
+	numtocharn(answer,an);
 	strcpy(formula,ch);
 	subcharn(formula,f,b-f+1);
 	ch[f]=' ';
@@ -849,6 +953,46 @@ void calculate(char *ch)
 	int n,f,b;
 	reppm(ch);
 	
+	n=findcharn(ch,"ln");
+	while(n!=-1)
+	{
+		b=findbn(ch,n+1);
+		calcutwo(ch,n+1,n,b);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"ln");
+	}
+	n=findcharn(ch,"sin");
+	while(n!=-1)
+	{
+		b=findbn(ch,n+2);
+		calcutwo(ch,n+2,n,b);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"sin");
+	}
+	n=findcharn(ch,"cos");
+	while(n!=-1)
+	{
+		b=findbn(ch,n+2);
+		calcutwo(ch,n+2,n,b);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"cos");
+	}
+	n=findcharn(ch,"tan");
+	while(n!=-1)
+	{
+		b=findbn(ch,n+2);
+		calcutwo(ch,n+2,n,b);
+		if(error==1) return;
+		reppm(ch);
+		printf("= %s\n",ch);
+		n=findcharn(ch,"tan");
+	}
 	n=findcharn(ch,"!");
 	while(n!=-1)
 	{
@@ -876,16 +1020,6 @@ void calculate(char *ch)
 		f=findfn(ch,n);
 		b=findbn(ch,n);
 		calcutwo(ch,n,f,b);
-		if(error==1) return;
-		reppm(ch);
-		printf("= %s\n",ch);
-		n=findcharn(ch,"'");
-	}
-	n=findcharn(ch,"ln");
-	while(n!=-1)
-	{
-		b=findbn(ch,n+1);
-		calcutwo(ch,n+1,n,b);
 		if(error==1) return;
 		reppm(ch);
 		printf("= %s\n",ch);
@@ -992,6 +1126,10 @@ int check(char *ch)
 	char c[charlen];
 	numtocharn(ans,c);
 	repcharn(ch,"ans",c);  //替换ans
+	strcpy(c,exp);
+	repcharn(ch,"e",subcharn(c,0,numblen+2));  //替换e
+	strcpy(c,pai);
+	repcharn(ch,"pi",subcharn(c,0,numblen+2));  //替换π
 	len=strlen(ch);
 	if(len==0)//检测式子的长度
 	{
@@ -1074,7 +1212,6 @@ int check(char *ch)
 	t=t+findcharn(ch,"/'")+1;
 	t=t+findcharn(ch,"^'")+1;
 	t=t+findcharn(ch,"!'")+1;
-	t=t+findcharn(ch,"n(")+1;
 	t=t+findcharn(ch,"n)")+1;
 	t=t+findcharn(ch,"n+")+1;
 	t=t+findcharn(ch,"n*")+1;
@@ -1084,9 +1221,27 @@ int check(char *ch)
 	t=t+findcharn(ch,"n'")+1;
 	t=t+findcharn(ch,"nl")+1;
 	t=t+findcharn(ch,")l")+1;
-	t=t+findcharn(ch,"^l")+1;
 	t=t+findcharn(ch,"!l")+1;
-	t=t+findcharn(ch,"'l")+1;
+	t=t+findcharn(ch,"ns")+1;
+	t=t+findcharn(ch,")s")+1;
+	t=t+findcharn(ch,"!s")+1;
+	t=t+findcharn(ch,"s)")+1;
+	t=t+findcharn(ch,"s+")+1;
+	t=t+findcharn(ch,"s*")+1;
+	t=t+findcharn(ch,"s/")+1;
+	t=t+findcharn(ch,"s^")+1;
+	t=t+findcharn(ch,"s!")+1;
+	t=t+findcharn(ch,"s'")+1;
+	t=t+findcharn(ch,"sl")+1;
+	t=t+findcharn(ch,"ss")+1;
+	t=t+findcharn(ch,"sc")+1;
+	t=t+findcharn(ch,")c")+1;
+	t=t+findcharn(ch,"!c")+1;
+	t=t+findcharn(ch,"nc")+1;
+	t=t+findcharn(ch,"nt")+1;
+	t=t+findcharn(ch,")t")+1;
+	t=t+findcharn(ch,"!t")+1;
+	t=t+findcharn(ch,"st")+1;
 	if(t>0)
 	{
 		pass=0;
@@ -1102,7 +1257,7 @@ int check(char *ch)
 	}
 	if(ch[len-1]=='+'||ch[len-1]=='-'||ch[len-1]=='*'||ch[len-1]=='/'||
 		ch[len-1]=='.'||ch[len-1]=='('||ch[len-1]=='^'||ch[len-1]=='\''||
-		ch[len-1]=='n')
+		ch[len-1]=='n'||ch[len-1]=='s')
 	{
 		pass=0;
 		printf("格式错误\n");
@@ -1210,6 +1365,63 @@ int check(char *ch)
 		c[t]=' ';
 	}
 	repcharn(c," n","ln");
+	t=0;
+	while(t!=-1)  //检测sin
+	{
+		t=findcharn(c,"sin");
+		if(t==-1) continue;
+		if(t==0)
+		{
+			c[t]=' ';
+			continue;
+		}
+		if(c[t-1]>='0'&&c[t-1]<='9')
+		{
+			pass=0;
+			printf("格式错误\n");
+			return pass;
+		}
+		c[t]=' ';
+	}
+	repcharn(c," in","sin");
+	t=0;
+	while(t!=-1)  //检测cos
+	{
+		t=findcharn(c,"cos");
+		if(t==-1) continue;
+		if(t==0)
+		{
+			c[t]=' ';
+			continue;
+		}
+		if(c[t-1]>='0'&&c[t-1]<='9')
+		{
+			pass=0;
+			printf("格式错误\n");
+			return pass;
+		}
+		c[t]=' ';
+	}
+	repcharn(c," os","cos");
+	t=0;
+	while(t!=-1)  //检测tan
+	{
+		t=findcharn(c,"tan");
+		if(t==-1) continue;
+		if(t==0)
+		{
+			c[t]=' ';
+			continue;
+		}
+		if(c[t-1]>='0'&&c[t-1]<='9')
+		{
+			pass=0;
+			printf("格式错误\n");
+			return pass;
+		}
+		c[t]=' ';
+	}
+	repcharn(c," an","tan");
 
 	repcharn(c,"(","");//检测剩余
 	repcharn(c,")","");
@@ -1222,6 +1434,9 @@ int check(char *ch)
 	repcharn(c,"!","");
 	repcharn(c,"'","");
 	repcharn(c,"ln","");
+	repcharn(c,"sin","");
+	repcharn(c,"cos","");
+	repcharn(c,"tan","");
 	len=strlen(c);
 	if(len==0)
 	{
