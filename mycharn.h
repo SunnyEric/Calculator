@@ -3,8 +3,9 @@
 */
 
 #include<string.h>
+#include<stdlib.h>
 
-#define charnlen 1000
+int charnlen=1000;
 
 int charntoint(char *ch)
 {
@@ -24,9 +25,9 @@ int charntoint(char *ch)
 	if(i==len) i=-1;
 	else minus=-1;
 	i++;
-	for(;i<=len-1;i++)
+	for(;i<=len-1;i++)//去掉负号前面的字符，包括负号
 	{
-		if(c[i]>='0'&&c[i]<='9')
+		if(c[i]>='0'&&c[i]<='9')//只取数字
 		{
 			c[j] = c[i];
 			j++;
@@ -96,20 +97,21 @@ char* subcharn(char *ch,int index,int l)
 	return ch;
 }
 
-int findcharn(char ch[charnlen],char *a)
+int findcharn(char *ch,char *a)
 {
 	int i,len,lena;
 	len=strlen(ch);
 	if(len==0) return -1;
 	lena=strlen(a);
 	if(lena==0) return -1;
-	char b[charnlen]="";
+	char *b=(char*)malloc(charnlen);
 	for(i=0;i<=len-1;i++)
 	{
 		strcpy(b,ch);
 		subcharn(b,i,lena);
 		if(strcmp(a,b)==0) break;
 	}
+	free(b);
 	if(i==len) i=-1;
 	return i;
 }
@@ -122,35 +124,36 @@ char* repcharn(char *ch,char *a,char *b)
 	lena=strlen(a);
 	if(lena==0) return ch;
 	lenb=strlen(b);
-	char cop[charnlen];
-	strcpy(cop,ch);
-	t=findcharn(cop,a);
+	char *c=(char*)malloc(charnlen);
+	strcpy(c,ch);
+	t=findcharn(c,a);
 	while(t!=-1)
 	{
 		for(i=0;i<=t-1;i++)
 		{
-			ch[j] = cop[i];
+			ch[j] = c[i];
 			j++;
 		}
-		len=strlen(cop);
+		len=strlen(c);
 		for(i=0;i<=len-1-t-lena;i++)
 		{
-			cop[i] = cop[i+t+lena];
+			c[i] = c[i+t+lena];
 		}
-		cop[i]='\0';
+		c[i]='\0';
 		for(i=0;i<=lenb-1;i++)
 		{
 			ch[j] = b[i];
 			j++;
 		}
-		t=findcharn(cop,a);
+		t=findcharn(c,a);
 	}
-	len=strlen(cop);
+	len=strlen(c);
 	for(i=0;i<=len-1;i++)
 	{
-		ch[j] = cop[i];
+		ch[j] = c[i];
 		j++;
 	}
 	ch[j]='\0';
+	free(c);
 	return ch;
 }
