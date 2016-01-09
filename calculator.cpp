@@ -1412,6 +1412,7 @@ struct number carry(struct number num)
 		num.b[numblen]=0;
 		num.lb--;
 		num=remzero(num);
+		show(num);
 	}
 	return num;
 }
@@ -1870,7 +1871,6 @@ void main()
 			{
 				ans=charntonum(s,ans);
 				ans=carry(ans);
-				show(ans);
 			}
 		}
 		printf("\n");
