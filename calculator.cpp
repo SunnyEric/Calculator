@@ -5,7 +5,7 @@
 #include<stdio.h>
 #include"mycharn.h"
 
-#define version "0.5.0"
+#define version "0.5.1"
 int numalen=100;
 int numblen=20;
 //numalenÒª´óÓÚnumblen*4
@@ -272,7 +272,7 @@ struct number getb(struct number num)
 	int i;
 	n.la=1;
 	n.lb=num.lb;
-	for(i=0;i<=n.lb;i++)
+	for(i=0;i<=n.lb-1;i++)
 	{
 		n.b[i]=num.b[i];
 	}
