@@ -5,7 +5,7 @@
 #include<stdio.h>
 #include"mycharn.h"
 
-#define version "0.5.1"
+#define version "0.5.2"
 int numalen=100;
 int numblen=20;
 //numalen要大于numblen*4
@@ -203,8 +203,7 @@ struct number remzero(struct number num)
 struct number dectopos(struct number num)
 {//去掉小数点
 	if(num.lb==0) return num;
-	num.la=num.la+num.lb;
-	if(num.la>numalen)
+	if(num.la+num.lb>numalen)
 	{
 		error=1;
 		return num;
