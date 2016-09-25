@@ -5,7 +5,7 @@
 #include<stdio.h>
 #include"mycharn.h"
 
-#define version "0.5.2"
+#define version "0.6.0"
 int numalen=100;
 int numblen=20;
 //numalen要大于numblen*4
@@ -24,8 +24,12 @@ struct number
 };
 
 struct number minus(struct number n1,struct number n2);
+struct number powint(struct number n1,int n2);
 struct number ln(struct number num);
 void show(struct number num);
+
+struct number ans;
+int error=0;
 
 struct number initial()
 {
@@ -69,9 +73,6 @@ void freenum(struct number num)
 	free(num.a);
 	free(num.b);
 }
-
-struct number ans;
-int error=0;
 
 struct number clonenum(struct number num)
 {
@@ -633,6 +634,30 @@ struct number fac(struct number num)
 	return n;
 }
 
+int getpown(int num)
+{//返回最大的不大于num的2的n次幂的值
+	int n=64;
+	while(n<=num)
+	{
+		n=n*2;
+	}
+	return n/2;
+}
+
+struct number powtwo(struct number n1,int n2)
+{//n1^(2^m)
+	struct number n;
+	int t=64;
+	n=powint(n1,t);
+	while(t<n2)
+	{
+		n=powint(n,2);
+		if(error==1) break;
+		t=t*2;
+	}
+	return n;
+}
+
 struct number powint(struct number n1,int n2)
 {
 	if(n2>1000000)
@@ -643,8 +668,27 @@ struct number powint(struct number n1,int n2)
 	}
 	struct number n=initial();
 	struct number nt;
-	int i;
+	int i,t;
 	n=charntonum("1",n);
+	while(n2>100)
+	{
+		t=getpown(n2);
+		n2=n2-t;
+		nt=clonenum(n1);
+		nt=powtwo(nt,t);
+		if(error==1)
+		{
+			freenum(nt);
+			freenum(n1);
+			return n;
+		}
+		n=multiply(n,nt);
+		if(error==1)
+		{
+			freenum(n1);
+			return n;
+		}
+	}
 	for(i=1;i<=n2;i++)
 	{
 		nt=clonenum(n1);
@@ -1432,9 +1476,9 @@ int check(char *ch)
 		gets(dec);
 		de=charntoint(dec);
 		pass=0;
-		if(de<100||de>40000)
+		if(de<100||de>100000)
 		{
-			printf("设置不正确，请输入100~40000之间的数\n");
+			printf("设置不正确，请输入100~100000之间的数\n");
 		}
 		else
 		{
