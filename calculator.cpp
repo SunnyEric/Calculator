@@ -5,7 +5,7 @@
 #include<stdio.h>
 #include"mycharn.h"
 
-#define version "0.6.0"
+#define version "0.6.1"
 int numalen=100;
 int numblen=20;
 //numalen要大于numblen*4
@@ -1449,7 +1449,8 @@ struct number carry(struct number num)
 			strcat(s,"1");
 			struct number nt=initial();
 			nt=charntonum(s,nt);
-			num=plus(num,nt);
+			if(num.mis==0) num=plus(num,nt);
+			if(num.mis==-1) num=minus(num,nt);
 			free(s);
 		}
 		num.b[numblen]=0;
@@ -1463,7 +1464,7 @@ struct number carry(struct number num)
 int check(char *ch)
 {
 	int i,t=0,len,pass=1;
-	if(strcmp(ch,"quit")==0)//退出
+	if(strcmp(ch,"quit")==0||strcmp(ch,"exit")==0)//退出
 	{
 		pass=2;
 		return pass;
