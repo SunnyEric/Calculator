@@ -1,4 +1,5 @@
 Debug
 Release
+ipch
 Calculator/Calculator.vcxproj.user
 .vs/Calculator/v15/Browse.VC.db

@@ -161,8 +161,8 @@ char* repcharn(char *ch,char *a,char *b)
 char *mygets(char *s)
 {
 	fgets(s, charnlen, stdin);
-	if (s[strlen(s) - 1] == '\n')
-		s[strlen(s) - 1] = '\0';
-	setbuf(stdin, s);//清除缓冲区
+	int l = strlen(s);
+	if (s[l - 1] == '\n') s[l - 1] = '\0';
+	else while (getchar() != '\n');//清除输入缓冲区
 	return s;
 }
