@@ -1,10 +1,4 @@
-*.exe
-*.ilk
-*.obj
-*.pch
-*.pdb
-*.res
-*.idb
-*.ncb
-*.opt
-*.plg
+Debug
+Release
+Calculator/Calculator.vcxproj.user
+.vs/Calculator/v15/Browse.VC.db

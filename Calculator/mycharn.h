@@ -157,3 +157,12 @@ char* repcharn(char *ch,char *a,char *b)
 	free(c);
 	return ch;
 }
+
+char *mygets(char *s)
+{
+	fgets(s, charnlen, stdin);
+	if (s[strlen(s) - 1] == '\n')
+		s[strlen(s) - 1] = '\0';
+	setbuf(stdin, s);//Çå³ı»º³åÇø
+	return s;
+}
